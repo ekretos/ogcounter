@@ -1,0 +1,81 @@
+{
+  "_comment": "CS 1.6 GoldSrc HLDS on ARM64 using QEMU i386 user-mode. Experimental; validate App ID 90 content before production use.",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2026-11-03T00:00:00+00:00",
+  "name": "Counter-Strike 1.6 (ARM64 / QEMU)",
+  "author": "ekretos",
+  "description": "Runs the 32-bit x86 GoldSrc HLDS dedicated server on ARM64 through QEMU user-mode emulation. Server files are downloaded on first start.",
+  "features": [],
+  "docker_images": {
+    "ARM64": "ghcr.io/ekretos/ogcounter:arm64"
+  },
+  "file_denylist": [],
+  "startup": "/usr/local/bin/cs16-start",
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\":\"Connection to Steam servers successful\",\"userInteraction\":[]}",
+    "stop": "quit"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\n# Installation is performed by the image on first server start.\nexit 0",
+      "container": "debian:bookworm-slim",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "Server Port",
+      "description": "UDP game port exposed by the server.",
+      "env_variable": "SERVER_PORT",
+      "default_value": "27015",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|between:1,65535",
+      "field_type": "text"
+    },
+    {
+      "name": "Default Map",
+      "description": "Map loaded at startup.",
+      "env_variable": "SERVER_MAP",
+      "default_value": "de_dust2",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|alpha_dash",
+      "field_type": "text"
+    },
+    {
+      "name": "Maximum Players",
+      "description": "Maximum player slots (1-32).",
+      "env_variable": "MAX_PLAYERS",
+      "default_value": "16",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|between:1,32",
+      "field_type": "text"
+    },
+    {
+      "name": "Server Password",
+      "description": "Optional join password.",
+      "env_variable": "SERVER_PASSWORD",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:64",
+      "field_type": "text"
+    },
+    {
+      "name": "RCON Password",
+      "description": "Optional RCON password.",
+      "env_variable": "RCON_PASSWORD",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:64",
+      "field_type": "text"
+    }
+  ]
+}
