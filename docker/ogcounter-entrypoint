@@ -22,6 +22,17 @@ if [[ ! -x "$STEAMCMD_DIR/steamcmd.sh" ]]; then
   fi
 fi
 
+# Valve's current steamcmd.sh selects linuxarm64 on an aarch64 host, but
+# its bootstrap payload installs the Box32-compatible x86 binary under linux32.
+# Provide the ARM64 path expected by steamcmd.sh for its post-update relaunch.
+if [[ -x "$STEAMCMD_DIR/linux32/steamcmd" ]]; then
+  mkdir -p "$STEAMCMD_DIR/linuxarm64"
+  ln -sfn ../linux32/steamcmd "$STEAMCMD_DIR/linuxarm64/steamcmd"
+else
+  echo "[ogcounter] ERROR: SteamCMD linux32/steamcmd binary is missing." >&2
+  exit 1
+fi
+
 export STEAMCMD_DIR SERVER_DIR
 echo "[ogcounter] ARM64 Box64/Box32 runtime ready."
 echo "[ogcounter] SteamCMD: $STEAMCMD_DIR"
