@@ -1,19 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-CONTAINER_HOME="${HOME:-/home/container}"
-IMAGE_RUNTIME="/opt/ogcounter-runtime"
-PERSISTENT_RUNTIME="${OGCOUNTER_RUNTIME_DIR:-$CONTAINER_HOME/.ogcounter/runtime}"
+echo "[ogcounter] ARM64 Box64/Box32 runtime ready."
+echo "[ogcounter] SteamCMD: ${STEAMCMD_DIR:-/home/steam/steamcmd}"
+echo "[ogcounter] Server files: ${SERVER_DIR:-/home/container/server}"
 
-if [[ ! -d "$IMAGE_RUNTIME/usr/bin" || ! -d "$IMAGE_RUNTIME/opt/i386" ]]; then
-  echo "[ogcounter] ERROR: runtime payload is incomplete in the image." >&2
-  exit 1
-fi
-
-mkdir -p "$PERSISTENT_RUNTIME"
-# Refresh the small runtime payload on each start so image upgrades are applied.
-cp -a "$IMAGE_RUNTIME/." "$PERSISTENT_RUNTIME/"
-chmod 0755 "$PERSISTENT_RUNTIME/usr/bin/qemu-i386-static"
-
-echo "[ogcounter] Runtime files are available in $PERSISTENT_RUNTIME"
 exec /usr/local/bin/cs16-start
