@@ -26,7 +26,7 @@ The previous QEMU i386 approach fails with current SteamCMD because QEMU linux-u
 4. Assign a UDP allocation (default `27015`).
 5. Select the `ARM64` Docker image and start the server.
 
-The egg startup command invokes `/usr/local/bin/ogcounter-entrypoint`. Game files are installed into the persistent `/home/container/server` directory; SteamCMD is supplied by the base runtime at `/home/steam/steamcmd`. First start attempts App ID 90 installation; later starts reuse the persistent server files.
+The Pterodactyl installation script installs App ID 90 into `/mnt/server` and downloads `docker/cs16-start` as `/mnt/server/start.sh`. Pterodactyl then runs `bash ./start.sh` using the egg startup command. The startup script only launches HLDS through Box64; it does not install or update game files. The Docker image provides the ARM64 Box64/Box32 runtime and does not override Pterodactyl's startup command.
 
 ## Environment variables
 
