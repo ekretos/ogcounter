@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.title="Counter-Strike 1.6 HLDS (ARM64 via Box64)"
 RUN test "$TARGETARCH" = "arm64" \
  && apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      bash ca-certificates curl tini tar gzip \
+      bash ca-certificates curl tar gzip \
  && rm -rf /var/lib/apt/lists/*
 
 
@@ -35,4 +35,7 @@ ENV HOME=/home/container \
 
 WORKDIR /home/container
 USER steam
-ENTRYPOINT ["/usr/bin/tini", "--"]
+# Pterodactyl/Wings supplies and supervises the egg startup command.
+# Clear any inherited entrypoint so the egg command is executed directly.
+ENTRYPOINT []
+CMD ["bash"]
