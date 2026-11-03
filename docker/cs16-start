@@ -5,13 +5,15 @@ SERVER_DIR="${SERVER_DIR:-/home/container/server}"
 STEAMCMD_DIR="${STEAMCMD_DIR:-/home/container/.steamcmd}"
 STEAMCMD_TARBALL="${STEAMCMD_DIR}/steamcmd_linux.tar.gz"
 STEAMCMD_BIN="${STEAMCMD_DIR}/linux32/steamcmd"
-QEMU="/usr/bin/qemu-i386-static"
-QEMU_PREFIX="/opt/i386"
+RUNTIME_ROOT="${OGCOUNTER_RUNTIME_DIR:-/home/container/.ogcounter/runtime}"
+QEMU="${RUNTIME_ROOT}/usr/bin/qemu-i386-static"
+QEMU_PREFIX="${RUNTIME_ROOT}/opt/i386"
 
 mkdir -p "$SERVER_DIR" "$STEAMCMD_DIR"
 
 if [[ ! -x "$QEMU" ]]; then
-  echo "[cs16] ERROR: qemu-i386-static is missing from the image." >&2
+  echo "[cs16] ERROR: QEMU runtime is missing at $QEMU." >&2
+  echo "[cs16] Restart the server using the OGCounter image entrypoint to seed runtime files." >&2
   exit 1
 fi
 
@@ -40,14 +42,13 @@ if [[ ! -x "$SERVER_DIR/hlds_linux" ]]; then
 fi
 
 if [[ ! -x "$SERVER_DIR/hlds_linux" ]]; then
-  echo "[cs16] ERROR: hlds_linux was not installed. Check SteamCMD output and App ID 90 content." >&2
+  echo "[cs16] ERROR: hlds_linux was not installed. Review SteamCMD output." >&2
   exit 1
 fi
 
 if [[ ! -d "$SERVER_DIR/cstrike" ]]; then
-  echo "[cs16] ERROR: the cstrike mod directory is missing." >&2
-  echo "[cs16] App ID 90 may not have delivered the Counter-Strike files for this install." >&2
-  echo "[cs16] Check the README troubleshooting section before opening the server." >&2
+  echo "[cs16] ERROR: cstrike/ is missing; App ID 90 did not provide the Counter-Strike mod files." >&2
+  echo "[cs16] See the README troubleshooting section for the required content-installation check." >&2
   exit 1
 fi
 
