@@ -24,8 +24,13 @@ COPY docker/ogcounter-entrypoint /usr/local/bin/ogcounter-entrypoint
 RUN chmod 0755 /usr/local/bin/cs16-start /usr/local/bin/ogcounter-entrypoint \
  && id steam \
  && test "$(id -u steam)" = "1000" \
- && mkdir -p /home/container/server \
- && chown -R steam:steam /home/container
+ && mkdir -p /home/container/server /home/steam/steamcmd \
+ && if [[ ! -f /home/steam/steamcmd/steamcmd.sh ]]; then \
+      curl -fsSL 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' \
+        | tar -xz -C /home/steam/steamcmd; \
+    fi \
+ && test -x /home/steam/steamcmd/steamcmd.sh \
+ && chown -R steam:steam /home/steam/steamcmd /home/container
 
 ENV HOME=/home/container \
     SERVER_DIR=/home/container/server \
