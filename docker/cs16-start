@@ -2,54 +2,27 @@
 set -Eeuo pipefail
 
 SERVER_DIR="${SERVER_DIR:-/home/container/server}"
-STEAMCMD_DIR="${STEAMCMD_DIR:-/home/container/.steamcmd}"
-STEAMCMD_TARBALL="${STEAMCMD_DIR}/steamcmd_linux.tar.gz"
-STEAMCMD_BIN="${STEAMCMD_DIR}/linux32/steamcmd"
-RUNTIME_ROOT="${OGCOUNTER_RUNTIME_DIR:-/home/container/.ogcounter/runtime}"
-QEMU="${RUNTIME_ROOT}/usr/bin/qemu-i386-static"
-QEMU_PREFIX="${RUNTIME_ROOT}/opt/i386"
+STEAMCMD_DIR="${STEAMCMD_DIR:-/home/steam/steamcmd}"
+STEAMCMD_SCRIPT="${STEAMCMD_DIR}/steamcmd.sh"
+BOX64="${BOX64_BIN:-/usr/local/bin/box64}"
 
-# SteamCMD cannot reliably read x86 CPU frequency through QEMU user-mode.
-# Allow an override, but provide a sane 2 GHz default to avoid SPEW_ABORT.
-export CPU_MHZ="${CPU_MHZ:-2000}"
+mkdir -p "$SERVER_DIR"
 
-mkdir -p "$SERVER_DIR" "$STEAMCMD_DIR"
-
-if [[ ! -x "$QEMU" ]]; then
-  echo "[cs16] ERROR: QEMU runtime is missing at $QEMU." >&2
-  echo "[cs16] Restart the server using the OGCounter image entrypoint to seed runtime files." >&2
+if [[ ! -x "$BOX64" ]]; then
+  echo "[cs16] ERROR: Box64 runtime is missing at $BOX64." >&2
   exit 1
 fi
 
-run_i386() {
-  "$QEMU" -L "$QEMU_PREFIX" "$@"
-}
-
-# SteamCMD exits with status 42 after applying its self-update and requesting
-# a relaunch. Treat that one exit as a restart signal, not a server failure.
-run_steamcmd() {
-  local status=0
-  run_i386 "$STEAMCMD_BIN" "$@" || status=$?
-  if [[ "$status" -eq 42 ]]; then
-    echo "[cs16] SteamCMD updated itself; restarting SteamCMD to continue installation..."
-    run_i386 "$STEAMCMD_BIN" "$@"
-    return $?
-  fi
-  return "$status"
-}
-
-if [[ ! -x "$STEAMCMD_BIN" ]]; then
-  echo "[cs16] Downloading Valve SteamCMD..."
-  curl --fail --location --retry 3 \
-    "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" \
-    --output "$STEAMCMD_TARBALL"
-  tar -xzf "$STEAMCMD_TARBALL" -C "$STEAMCMD_DIR"
-  rm -f "$STEAMCMD_TARBALL"
+if [[ ! -f "$STEAMCMD_SCRIPT" ]]; then
+  echo "[cs16] ERROR: SteamCMD is missing at $STEAMCMD_SCRIPT." >&2
+  exit 1
 fi
 
-if [[ ! -x "$SERVER_DIR/hlds_linux" ]]; then
+# The upstream ARM64 SteamCMD runtime invokes 32-bit SteamCMD through Box32
+# (included with Box64). Do not invoke the raw linux32/steamcmd ELF directly.
+if [[ ! -x "$SERVER_DIR/hlds_linux" || ! -d "$SERVER_DIR/cstrike" ]]; then
   echo "[cs16] Installing/updating the Half-Life dedicated server (App ID 90)..."
-  run_i386 "$STEAMCMD_BIN" \
+  "$STEAMCMD_SCRIPT" \
     +@ShutdownOnFailedCommand 1 \
     +@NoPromptForPassword 1 \
     +force_install_dir "$SERVER_DIR" \
@@ -65,7 +38,6 @@ fi
 
 if [[ ! -d "$SERVER_DIR/cstrike" ]]; then
   echo "[cs16] ERROR: cstrike/ is missing; App ID 90 did not provide the Counter-Strike mod files." >&2
-  echo "[cs16] See the README troubleshooting section for the required content-installation check." >&2
   exit 1
 fi
 
@@ -87,6 +59,6 @@ if [[ -n "${RCON_PASSWORD:-}" ]]; then
   ARGS+=(+rcon_password "$RCON_PASSWORD")
 fi
 
-echo "[cs16] Starting 32-bit x86 HLDS through QEMU user-mode on ARM64."
+echo "[cs16] Starting 32-bit x86 HLDS through Box64/Box32 on ARM64."
 echo "[cs16] Map: ${SERVER_MAP:-de_dust2} | Port: ${SERVER_PORT:-27015} | Players: ${MAX_PLAYERS:-16}"
-exec "$QEMU" -L "$QEMU_PREFIX" ./hlds_linux "${ARGS[@]}"
+exec "$BOX64" ./hlds_linux "${ARGS[@]}"
