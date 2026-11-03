@@ -13,7 +13,7 @@
     "ARM64": "ghcr.io/ekretos/ogcounter:arm64"
   },
   "file_denylist": [],
-  "startup": "/usr/local/bin/box64 ./hlds_linux -game cstrike -console -port {{SERVER_PORT}} +ip 0.0.0.0 +map {{SERVER_MAP}} +maxplayers {{MAX_PLAYERS}}",
+  "startup": "/usr/local/bin/box64 ./hlds_linux -game cstrike -console -port {{SERVER_PORT}} +ip 0.0.0.0 +map {{SERVER_MAP}} +maxplayers {{MAX_PLAYERS}} +sv_password \"{{SERVER_PASSWORD}}\" +rcon_password \"{{RCON_PASSWORD}}\"",
   "config": {
     "files": "{}",
     "startup": "{\"done\":\"Server is listening\"}",
