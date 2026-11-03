@@ -21,13 +21,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up QEMU for cross-platform build stages
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -35,16 +41,18 @@ jobs:
 
       - name: Generate image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/ekretos/ogcounter
+          images: |
+            ${{ vars.DOCKERHUB_USERNAME }}/ogcounter
+            ghcr.io/ekretos/ogcounter
           tags: |
             type=raw,value=arm64
             type=raw,value=latest
             type=ref,event=tag
 
       - name: Build and push ARM64 image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/arm64
