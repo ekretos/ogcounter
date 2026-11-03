@@ -71,4 +71,4 @@ fi
 
 echo "[cs16] Starting 32-bit x86 HLDS through QEMU user-mode on ARM64."
 echo "[cs16] Map: ${SERVER_MAP:-de_dust2} | Port: ${SERVER_PORT:-27015} | Players: ${MAX_PLAYERS:-16}"
-exec run_i386 ./hlds_linux "${ARGS[@]}"
+exec "$QEMU" -L "$QEMU_PREFIX" ./hlds_linux "${ARGS[@]}"
