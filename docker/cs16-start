@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SERVER_DIR="${SERVER_DIR:-/home/container/server}"
+STEAMCMD_DIR="${STEAMCMD_DIR:-/home/container/.steamcmd}"
+STEAMCMD_TARBALL="${STEAMCMD_DIR}/steamcmd_linux.tar.gz"
+STEAMCMD_BIN="${STEAMCMD_DIR}/steamcmd"
+QEMU="/usr/bin/qemu-i386-static"
+QEMU_PREFIX="/opt/i386"
+
+mkdir -p "$SERVER_DIR" "$STEAMCMD_DIR"
+
+if [[ ! -x "$QEMU" ]]; then
+  echo "[cs16] ERROR: qemu-i386-static is missing from the image." >&2
+  exit 1
+fi
+
+run_i386() {
+  "$QEMU" -L "$QEMU_PREFIX" "$@"
+}
+
+if [[ ! -x "$STEAMCMD_BIN" ]]; then
+  echo "[cs16] Downloading Valve SteamCMD..."
+  curl --fail --location --retry 3 \
+    "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" \
+    --output "$STEAMCMD_TARBALL"
+  tar -xzf "$STEAMCMD_TARBALL" -C "$STEAMCMD_DIR"
+  rm -f "$STEAMCMD_TARBALL"
+fi
+
+if [[ ! -x "$SERVER_DIR/hlds_linux" ]]; then
+  echo "[cs16] Installing/updating the Half-Life dedicated server (App ID 90)..."
+  run_i386 "$STEAMCMD_BIN" \
+    +@ShutdownOnFailedCommand 1 \
+    +@NoPromptForPassword 1 \
+    +force_install_dir "$SERVER_DIR" \
+    +login anonymous \
+    +app_update 90 validate \
+    +quit
+fi
+
+if [[ ! -x "$SERVER_DIR/hlds_linux" ]]; then
+  echo "[cs16] ERROR: hlds_linux was not installed. Check SteamCMD output and App ID 90 content." >&2
+  exit 1
+fi
+
+if [[ ! -d "$SERVER_DIR/cstrike" ]]; then
+  echo "[cs16] ERROR: the cstrike mod directory is missing." >&2
+  echo "[cs16] App ID 90 may not have delivered the Counter-Strike files for this install." >&2
+  echo "[cs16] Check the README troubleshooting section before opening the server." >&2
+  exit 1
+fi
+
+cd "$SERVER_DIR"
+
+ARGS=(
+  -game cstrike
+  -console
+  -port "${SERVER_PORT:-27015}"
+  +ip 0.0.0.0
+  +map "${SERVER_MAP:-de_dust2}"
+  +maxplayers "${MAX_PLAYERS:-16}"
+)
+
+if [[ -n "${SERVER_PASSWORD:-}" ]]; then
+  ARGS+=(+sv_password "$SERVER_PASSWORD")
+fi
+if [[ -n "${RCON_PASSWORD:-}" ]]; then
+  ARGS+=(+rcon_password "$RCON_PASSWORD")
+fi
+
+echo "[cs16] Starting 32-bit x86 HLDS through QEMU user-mode on ARM64."
+echo "[cs16] Map: ${SERVER_MAP:-de_dust2} | Port: ${SERVER_PORT:-27015} | Players: ${MAX_PLAYERS:-16}"
+exec run_i386 ./hlds_linux "${ARGS[@]}"
