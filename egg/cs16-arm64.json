@@ -1,5 +1,5 @@
 {
-  "_comment": "CS 1.6 GoldSrc HLDS on ARM64 using Box64/Box32.",
+  "_comment": "Counter-Strike 1.6 GoldSrc HLDS on ARM64 using Box64/Box32. Pterodactyl owns installation and startup.",
   "meta": {
     "version": "PTDL_v2",
     "update_url": null
@@ -7,22 +7,22 @@
   "exported_at": "2026-11-03T00:00:00+00:00",
   "name": "Counter-Strike 1.6 (ARM64 / Box64)",
   "author": "ekretos",
-  "description": "Runs 32-bit x86 SteamCMD and GoldSrc HLDS on ARM64 using Box64 with its Box32 compatibility layer. Server files are stored in the persistent Pterodactyl directory.",
+  "description": "Pterodactyl-native CS 1.6 egg. The installation script installs App ID 90 into /mnt/server; the egg startup command launches HLDS directly through Box64.",
   "features": [],
   "docker_images": {
     "ARM64": "ghcr.io/ekretos/ogcounter:arm64"
   },
   "file_denylist": [],
-  "startup": "/usr/local/bin/ogcounter-entrypoint",
+  "startup": "/usr/local/bin/box64 ./hlds_linux -game cstrike -console -port {{SERVER_PORT}} +ip 0.0.0.0 +map {{SERVER_MAP}} +maxplayers {{MAX_PLAYERS}}",
   "config": {
     "files": "{}",
-    "startup": "{\"done\":\"[cs16] Starting 32-bit x86 HLDS\",\"userInteraction\":[]}",
+    "startup": "{\"done\":\"Server is listening\"}",
     "stop": "quit"
   },
   "scripts": {
     "installation": {
-      "script": "#!/bin/bash\n# SteamCMD and Box64 are provided by the runtime image. Game content installs on first start.\nexit 0",
-      "container": "debian:trixie-slim",
+      "script": "#!/bin/bash\nset -e\n\nSTEAMCMD_DIR=\"/home/steam/steamcmd\"\nSTEAMCMD=\"$STEAMCMD_DIR/steamcmd.sh\"\n\nif [ ! -x \"$STEAMCMD\" ]; then\n  echo \"ERROR: SteamCMD is missing from the ARM64 runtime image.\"\n  exit 1\nfi\n\n# Valve's ARM64 launcher expects this path, while its x86 payload is\n# provided under linux32 and executed by the image's Box32 compatibility.\nif [ ! -x \"$STEAMCMD_DIR/linux32/steamcmd\" ]; then\n  mkdir -p \"$STEAMCMD_DIR\"\n  \"$STEAMCMD\" +quit || true\nfi\nif [ ! -x \"$STEAMCMD_DIR/linux32/steamcmd\" ]; then\n  echo \"ERROR: SteamCMD linux32 binary was not bootstrapped.\"\n  exit 1\nfi\nmkdir -p \"$STEAMCMD_DIR/linuxarm64\"\nln -sfn ../linux32/steamcmd \"$STEAMCMD_DIR/linuxarm64/steamcmd\"\n\necho \"Installing Counter-Strike 1.6 dedicated server files into /mnt/server...\"\n\"$STEAMCMD\" \\\n  +@ShutdownOnFailedCommand 1 \\\n  +@NoPromptForPassword 1 \\\n  +force_install_dir /mnt/server \\\n  +login anonymous \\\n  +app_update 90 validate \\\n  +quit\n\nif [ ! -x /mnt/server/hlds_linux ] || [ ! -d /mnt/server/cstrike ]; then\n  echo \"ERROR: HLDS installation incomplete (hlds_linux or cstrike missing).\"\n  exit 1\nfi\nchmod +x /mnt/server/hlds_linux\necho \"Counter-Strike 1.6 installation completed.\"\n",
+      "container": "ghcr.io/ekretos/ogcounter:arm64",
       "entrypoint": "bash"
     }
   },
