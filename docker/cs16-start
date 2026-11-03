@@ -4,7 +4,7 @@ set -Eeuo pipefail
 SERVER_DIR="${SERVER_DIR:-/home/container/server}"
 STEAMCMD_DIR="${STEAMCMD_DIR:-/home/container/.steamcmd}"
 STEAMCMD_TARBALL="${STEAMCMD_DIR}/steamcmd_linux.tar.gz"
-STEAMCMD_BIN="${STEAMCMD_DIR}/steamcmd"
+STEAMCMD_BIN="${STEAMCMD_DIR}/linux32/steamcmd"
 QEMU="/usr/bin/qemu-i386-static"
 QEMU_PREFIX="/opt/i386"
 
