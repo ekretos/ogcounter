@@ -7,21 +7,21 @@
   "exported_at": "2026-11-03T00:00:00+00:00",
   "name": "Counter-Strike 1.6 (ARM64 / QEMU)",
   "author": "ekretos",
-  "description": "Runs the 32-bit x86 GoldSrc HLDS dedicated server on ARM64 through QEMU user-mode emulation. Server files are downloaded on first start.",
+  "description": "Runs the 32-bit x86 GoldSrc HLDS dedicated server on ARM64 through QEMU user-mode emulation. Runtime files are seeded into the persistent server directory and visible in File Manager.",
   "features": [],
   "docker_images": {
     "ARM64": "ghcr.io/ekretos/ogcounter:arm64"
   },
   "file_denylist": [],
-  "startup": "/usr/local/bin/cs16-start",
+  "startup": "/usr/local/bin/ogcounter-entrypoint",
   "config": {
     "files": "{}",
-    "startup": "{\"done\":\"Connection to Steam servers successful\",\"userInteraction\":[]}",
+    "startup": "{\"done\":\"[cs16] Starting 32-bit x86 HLDS\",\"userInteraction\":[]}",
     "stop": "quit"
   },
   "scripts": {
     "installation": {
-      "script": "#!/bin/bash\n# Installation is performed by the image on first server start.\nexit 0",
+      "script": "#!/bin/bash\n# Runtime and game content are installed on first server start.\nexit 0",
       "container": "debian:bookworm-slim",
       "entrypoint": "bash"
     }
