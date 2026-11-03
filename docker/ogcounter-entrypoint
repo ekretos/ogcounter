@@ -1,8 +1,30 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Pterodactyl bind-mounts /home/container. Keep a runtime fallback there so
+# SteamCMD remains available even if the image's baked-in copy is absent.
+DEFAULT_STEAMCMD_DIR="/home/steam/steamcmd"
+STEAMCMD_DIR="${STEAMCMD_DIR:-$DEFAULT_STEAMCMD_DIR}"
+SERVER_DIR="${SERVER_DIR:-/home/container/server}"
+
+if [[ ! -x "$STEAMCMD_DIR/steamcmd.sh" ]]; then
+  echo "[ogcounter] SteamCMD is not present in the image; bootstrapping into /home/container/steamcmd..."
+  STEAMCMD_DIR="/home/container/steamcmd"
+  mkdir -p "$STEAMCMD_DIR"
+  if [[ ! -x "$STEAMCMD_DIR/steamcmd.sh" ]]; then
+    curl -fL --retry 3 --retry-delay 2 \
+      https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+      | tar -xz -C "$STEAMCMD_DIR"
+  fi
+  if [[ ! -x "$STEAMCMD_DIR/steamcmd.sh" ]]; then
+    echo "[ogcounter] ERROR: SteamCMD bootstrap failed; steamcmd.sh was not created." >&2
+    exit 1
+  fi
+fi
+
+export STEAMCMD_DIR SERVER_DIR
 echo "[ogcounter] ARM64 Box64/Box32 runtime ready."
-echo "[ogcounter] SteamCMD: ${STEAMCMD_DIR:-/home/steam/steamcmd}"
-echo "[ogcounter] Server files: ${SERVER_DIR:-/home/container/server}"
+echo "[ogcounter] SteamCMD: $STEAMCMD_DIR"
+echo "[ogcounter] Server files: $SERVER_DIR"
 
 exec /usr/local/bin/cs16-start
