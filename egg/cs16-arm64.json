@@ -7,13 +7,13 @@
   "exported_at": "2026-11-03T00:00:00+00:00",
   "name": "Counter-Strike 1.6 (ARM64 / Box64)",
   "author": "ekretos",
-  "description": "Pterodactyl-native CS 1.6 egg. The installation script installs App ID 90 into /mnt/server; the egg startup command launches HLDS directly through Box64.",
+  "description": "Pterodactyl-native CS 1.6 egg. Installer downloads SteamCMD game files and the repository startup script into /mnt/server; Pterodactyl executes start.sh at runtime.",
   "features": [],
   "docker_images": {
     "ARM64": "ghcr.io/ekretos/ogcounter:arm64"
   },
   "file_denylist": [],
-  "startup": "/usr/local/bin/box64 ./hlds_linux -game cstrike -console -port {{SERVER_PORT}} +ip 0.0.0.0 +map {{SERVER_MAP}} +maxplayers {{MAX_PLAYERS}} +sv_password \"{{SERVER_PASSWORD}}\" +rcon_password \"{{RCON_PASSWORD}}\"",
+  "startup": "bash ./start.sh",
   "config": {
     "files": "{}",
     "startup": "{\"done\":\"Server is listening\"}",
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "installation": {
-      "script": "#!/bin/bash\nset -e\n\nSTEAMCMD_DIR=\"/home/steam/steamcmd\"\nSTEAMCMD=\"$STEAMCMD_DIR/steamcmd.sh\"\n\nif [ ! -x \"$STEAMCMD\" ]; then\n  echo \"ERROR: SteamCMD is missing from the ARM64 runtime image.\"\n  exit 1\nfi\n\n# Valve's ARM64 launcher expects this path, while its x86 payload is\n# provided under linux32 and executed by the image's Box32 compatibility.\nif [ ! -x \"$STEAMCMD_DIR/linux32/steamcmd\" ]; then\n  mkdir -p \"$STEAMCMD_DIR\"\n  \"$STEAMCMD\" +quit || true\nfi\nif [ ! -x \"$STEAMCMD_DIR/linux32/steamcmd\" ]; then\n  echo \"ERROR: SteamCMD linux32 binary was not bootstrapped.\"\n  exit 1\nfi\nmkdir -p \"$STEAMCMD_DIR/linuxarm64\"\nln -sfn ../linux32/steamcmd \"$STEAMCMD_DIR/linuxarm64/steamcmd\"\n\necho \"Installing Counter-Strike 1.6 dedicated server files into /mnt/server...\"\n\"$STEAMCMD\" \\\n  +@ShutdownOnFailedCommand 1 \\\n  +@NoPromptForPassword 1 \\\n  +force_install_dir /mnt/server \\\n  +login anonymous \\\n  +app_update 90 validate \\\n  +quit\n\nif [ ! -x /mnt/server/hlds_linux ] || [ ! -d /mnt/server/cstrike ]; then\n  echo \"ERROR: HLDS installation incomplete (hlds_linux or cstrike missing).\"\n  exit 1\nfi\nchmod +x /mnt/server/hlds_linux\necho \"Counter-Strike 1.6 installation completed.\"\n",
+      "script": "#!/bin/bash\nset -e\n\nSTEAMCMD_DIR=\"/home/steam/steamcmd\"\nSTEAMCMD=\"$STEAMCMD_DIR/steamcmd.sh\"\n\nif [ ! -x \"$STEAMCMD\" ]; then\n  echo \"ERROR: SteamCMD is missing from the ARM64 runtime image.\"\n  exit 1\nfi\n\n# Ensure Valve's ARM64 launcher resolves its 32-bit SteamCMD payload via Box32.\nif [ ! -x \"$STEAMCMD_DIR/linux32/steamcmd\" ]; then\n  \"$STEAMCMD\" +quit || true\nfi\nif [ ! -x \"$STEAMCMD_DIR/linux32/steamcmd\" ]; then\n  echo \"ERROR: SteamCMD linux32 binary was not bootstrapped.\"\n  exit 1\nfi\nmkdir -p \"$STEAMCMD_DIR/linuxarm64\"\nln -sfn ../linux32/steamcmd \"$STEAMCMD_DIR/linuxarm64/steamcmd\"\n\necho \"Installing HLDS into /mnt/server...\"\n\"$STEAMCMD\" \\\n  +@ShutdownOnFailedCommand 1 \\\n  +@NoPromptForPassword 1 \\\n  +force_install_dir /mnt/server \\\n  +login anonymous \\\n  +app_update 90 validate \\\n  +quit\n\nif [ ! -x /mnt/server/hlds_linux ] || [ ! -d /mnt/server/cstrike ]; then\n  echo \"ERROR: Installation incomplete: hlds_linux or cstrike is missing.\"\n  exit 1\nfi\n\necho \"Downloading the Pterodactyl startup script...\"\ncurl -fL --retry 3 --retry-delay 2 \\\n  https://raw.githubusercontent.com/ekretos/ogcounter/dev/docker/cs16-start \\\n  -o /mnt/server/start.sh\nchmod 0755 /mnt/server/start.sh\necho \"Installation completed. Pterodactyl will run ./start.sh on startup.\"\n",
       "container": "ghcr.io/ekretos/ogcounter:arm64",
       "entrypoint": "bash"
     }
