@@ -25,6 +25,19 @@ run_i386() {
   "$QEMU" -L "$QEMU_PREFIX" "$@"
 }
 
+# SteamCMD exits with status 42 after applying its self-update and requesting
+# a relaunch. Treat that one exit as a restart signal, not a server failure.
+run_steamcmd() {
+  local status=0
+  run_i386 "$STEAMCMD_BIN" "$@" || status=$?
+  if [[ "$status" -eq 42 ]]; then
+    echo "[cs16] SteamCMD updated itself; restarting SteamCMD to continue installation..."
+    run_i386 "$STEAMCMD_BIN" "$@"
+    return $?
+  fi
+  return "$status"
+}
+
 if [[ ! -x "$STEAMCMD_BIN" ]]; then
   echo "[cs16] Downloading Valve SteamCMD..."
   curl --fail --location --retry 3 \
