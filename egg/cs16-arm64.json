@@ -1,13 +1,13 @@
 {
-  "_comment": "CS 1.6 GoldSrc HLDS on ARM64 using QEMU i386 user-mode. Experimental; validate App ID 90 content before production use.",
+  "_comment": "CS 1.6 GoldSrc HLDS on ARM64 using Box64/Box32.",
   "meta": {
     "version": "PTDL_v2",
     "update_url": null
   },
   "exported_at": "2026-11-03T00:00:00+00:00",
-  "name": "Counter-Strike 1.6 (ARM64 / QEMU)",
+  "name": "Counter-Strike 1.6 (ARM64 / Box64)",
   "author": "ekretos",
-  "description": "Runs the 32-bit x86 GoldSrc HLDS dedicated server on ARM64 through QEMU user-mode emulation. Runtime files are seeded into the persistent server directory and visible in File Manager.",
+  "description": "Runs 32-bit x86 SteamCMD and GoldSrc HLDS on ARM64 using Box64 with its Box32 compatibility layer. Server files are stored in the persistent Pterodactyl directory.",
   "features": [],
   "docker_images": {
     "ARM64": "ghcr.io/ekretos/ogcounter:arm64"
@@ -21,8 +21,8 @@
   },
   "scripts": {
     "installation": {
-      "script": "#!/bin/bash\n# Runtime and game content are installed on first server start.\nexit 0",
-      "container": "debian:bookworm-slim",
+      "script": "#!/bin/bash\n# SteamCMD and Box64 are provided by the runtime image. Game content installs on first start.\nexit 0",
+      "container": "debian:trixie-slim",
       "entrypoint": "bash"
     }
   },
