@@ -3,10 +3,10 @@
 # GoldSrc HLDS and Valve SteamCMD Linux builds are 32-bit x86 (i386).
 # Build an i386 userspace for QEMU's dynamic loader and shared libraries.
 FROM --platform=linux/386 debian:bookworm-slim AS i386-libs
-RUN apt-get update \\
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \\
-      ca-certificates libc6 libgcc-s1 libstdc++6 \\
-      libcurl4 libssl3 zlib1g libtinfo6 libncurses6 \\
+RUN apt-get update  \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends  \
+      ca-certificates libc6 libgcc-s1 libstdc++6  \
+      libcurl4 libssl3 zlib1g libtinfo6 libncurses6  \
  && rm -rf /var/lib/apt/lists/*
 
 FROM --platform=$TARGETPLATFORM debian:bookworm-slim
