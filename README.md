@@ -6,11 +6,13 @@ A Pterodactyl-oriented ARM64 Docker image for the **32-bit x86** GoldSrc dedicat
 
 ## Image
 
+The project publishes exactly one image reference:
+
 ```text
 ghcr.io/ekretos/ogcounter:arm64
 ```
 
-The GitHub Actions workflow publishes `arm64` and `latest` tags for pushes to `dev`, plus version tags.
+GitHub Actions builds and pushes only this ARM64 image to GitHub Container Registry (GHCR). Docker Hub publishing and the `latest` tag are not used.
 
 ## Why the runtime is seeded into /home/container
 
