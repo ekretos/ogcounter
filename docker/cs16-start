@@ -1,48 +1,20 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-SERVER_DIR="${SERVER_DIR:-/home/container/server}"
-STEAMCMD_DIR="${STEAMCMD_DIR:-/home/steam/steamcmd}"
-STEAMCMD_SCRIPT="${STEAMCMD_DIR}/steamcmd.sh"
+SERVER_DIR="${SERVER_DIR:-/home/container}"
 BOX64="${BOX64_BIN:-/usr/local/bin/box64}"
 
-mkdir -p "$SERVER_DIR"
-
 if [[ ! -x "$BOX64" ]]; then
-  echo "[cs16] ERROR: Box64 runtime is missing at $BOX64." >&2
+  echo "[ogcounter] ERROR: Box64 is missing: $BOX64" >&2
   exit 1
 fi
 
-if [[ ! -f "$STEAMCMD_SCRIPT" ]]; then
-  echo "[cs16] ERROR: SteamCMD is missing at $STEAMCMD_SCRIPT." >&2
-  exit 1
-fi
-
-# The upstream ARM64 SteamCMD runtime invokes 32-bit SteamCMD through Box32
-# (included with Box64). Do not invoke the raw linux32/steamcmd ELF directly.
 if [[ ! -x "$SERVER_DIR/hlds_linux" || ! -d "$SERVER_DIR/cstrike" ]]; then
-  echo "[cs16] Installing/updating the Half-Life dedicated server (App ID 90)..."
-  "$STEAMCMD_SCRIPT" \
-    +@ShutdownOnFailedCommand 1 \
-    +@NoPromptForPassword 1 \
-    +force_install_dir "$SERVER_DIR" \
-    +login anonymous \
-    +app_update 90 validate \
-    +quit
-fi
-
-if [[ ! -x "$SERVER_DIR/hlds_linux" ]]; then
-  echo "[cs16] ERROR: hlds_linux was not installed. Review SteamCMD output." >&2
-  exit 1
-fi
-
-if [[ ! -d "$SERVER_DIR/cstrike" ]]; then
-  echo "[cs16] ERROR: cstrike/ is missing; App ID 90 did not provide the Counter-Strike mod files." >&2
+  echo "[ogcounter] ERROR: HLDS or cstrike files are missing. Run the Pterodactyl installer first." >&2
   exit 1
 fi
 
 cd "$SERVER_DIR"
-
 ARGS=(
   -game cstrike
   -console
@@ -59,6 +31,5 @@ if [[ -n "${RCON_PASSWORD:-}" ]]; then
   ARGS+=(+rcon_password "$RCON_PASSWORD")
 fi
 
-echo "[cs16] Starting 32-bit x86 HLDS through Box64/Box32 on ARM64."
-echo "[cs16] Map: ${SERVER_MAP:-de_dust2} | Port: ${SERVER_PORT:-27015} | Players: ${MAX_PLAYERS:-16}"
+echo "[ogcounter] Starting HLDS via Box64/Box32."
 exec "$BOX64" ./hlds_linux "${ARGS[@]}"
