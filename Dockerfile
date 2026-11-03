@@ -19,11 +19,13 @@ RUN test "$TARGETARCH" = "arm64" \
 COPY docker/cs16-start /usr/local/bin/cs16-start
 COPY docker/ogcounter-entrypoint /usr/local/bin/ogcounter-entrypoint
 
+# The upstream steam user already owns UID 1000, which is the UID expected
+# by Pterodactyl. Reuse it instead of creating a conflicting second account.
 RUN chmod 0755 /usr/local/bin/cs16-start /usr/local/bin/ogcounter-entrypoint \
- && useradd --create-home --uid 1000 --shell /bin/bash container \
+ && id steam \
+ && test "$(id -u steam)" = "1000" \
  && mkdir -p /home/container/server \
- && chown -R container:container /home/container \
- && chown -R container:container /home/steam/steamcmd /home/steam
+ && chown -R steam:steam /home/container
 
 ENV HOME=/home/container \
     SERVER_DIR=/home/container/server \
@@ -36,6 +38,6 @@ ENV HOME=/home/container \
     ARM64_DEVICE=generic
 
 WORKDIR /home/container
-USER container
+USER steam
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/usr/local/bin/ogcounter-entrypoint"]
