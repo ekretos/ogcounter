@@ -16,13 +16,10 @@ RUN test "$TARGETARCH" = "arm64" \
       bash ca-certificates curl tini tar gzip \
  && rm -rf /var/lib/apt/lists/*
 
-COPY docker/cs16-start /usr/local/bin/cs16-start
-COPY docker/ogcounter-entrypoint /usr/local/bin/ogcounter-entrypoint
 
 # The upstream steam user already owns UID 1000, which is the UID expected
 # by Pterodactyl. Reuse it instead of creating a conflicting second account.
-RUN chmod 0755 /usr/local/bin/cs16-start /usr/local/bin/ogcounter-entrypoint \
- && id steam \
+RUN id steam \
  && test "$(id -u steam)" = "1000" \
  && mkdir -p /home/container/server /home/steam/steamcmd \
  && if [[ ! -f /home/steam/steamcmd/steamcmd.sh ]]; then \
@@ -33,16 +30,9 @@ RUN chmod 0755 /usr/local/bin/cs16-start /usr/local/bin/ogcounter-entrypoint \
  && chown -R steam:steam /home/steam/steamcmd /home/container
 
 ENV HOME=/home/container \
-    SERVER_DIR=/home/container/server \
     STEAMCMD_DIR=/home/steam/steamcmd \
-    SERVER_PORT=27015 \
-    SERVER_MAP=de_dust2 \
-    MAX_PLAYERS=16 \
-    RCON_PASSWORD= \
-    SERVER_PASSWORD= \
     ARM64_DEVICE=generic
 
 WORKDIR /home/container
 USER steam
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/usr/local/bin/ogcounter-entrypoint"]
